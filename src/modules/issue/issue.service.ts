@@ -241,9 +241,7 @@ export const updateIssueIntoDB = async (
     throw new AppError(StatusCodes.NOT_FOUND, "Issue not found");
   }
 
-
   if (currentUser.role === "contributor") {
-
     if (existingIssue.reporter_id !== currentUser.id) {
       throw new AppError(
         StatusCodes.FORBIDDEN,
@@ -266,11 +264,9 @@ export const updateIssueIntoDB = async (
     }
   }
 
-
   if (Object.keys(payload).length === 0) {
     throw new AppError(StatusCodes.BAD_REQUEST, "No update data provided");
   }
-
 
   const fields: string[] = [];
 
@@ -327,7 +323,6 @@ export const updateIssueIntoDB = async (
     fieldIndex++;
   }
 
-
   fields.push(`updated_at = NOW()`);
 
   // Update the issue
@@ -352,4 +347,31 @@ export const updateIssueIntoDB = async (
   const updatedIssueResult = await pool.query(query, values);
 
   return updatedIssueResult.rows[0];
+};
+
+export const deleteIssueFromDB = async (issueId: number) => {
+  const existingIssueResult = await pool.query(
+    `
+          SELECT id
+          FROM issues
+          WHERE id = $1;
+        `,
+    [issueId],
+  );
+
+  const existingIssue = existingIssueResult.rows[0];
+
+  if (!existingIssue) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Issue not found");
+  }
+
+  await pool.query(
+    `
+        DELETE FROM issues
+        WHERE id = $1;
+      `,
+    [issueId],
+  );
+
+  return null;
 };

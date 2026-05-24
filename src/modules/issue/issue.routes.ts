@@ -3,6 +3,7 @@ import { auth } from "../../middlewares/auth.js";
 import { authorize } from "../../middlewares/authorize.js";
 import {
   createIssue,
+  deleteIssue,
   getAllIssues,
   getSingleIssue,
   updateIssue,
@@ -14,10 +15,7 @@ router.post("/", auth, authorize("contributor", "maintainer"), createIssue);
 router.get("/", getAllIssues);
 router.get("/:id", getSingleIssue);
 
-router.patch(
-  "/:id",
-  auth,
-  authorize("contributor", "maintainer"),
-  updateIssue,
-);
+router.patch("/:id", auth, authorize("contributor", "maintainer"), updateIssue);
+
+router.delete("/:id", auth, authorize("maintainer"), deleteIssue);
 export const IssueRoutes = router;

@@ -3,6 +3,7 @@ import { catchAsync } from "../../utils/catchAsync.js";
 import { sendResponse } from "../../utils/sendResponse.js";
 import {
   createIssueIntoDB,
+  deleteIssueFromDB,
   getAllIssuesFromDB,
   getSingleIssueFromDB,
   updateIssueIntoDB,
@@ -46,16 +47,24 @@ export const getSingleIssue = catchAsync(async (req, res) => {
 export const updateIssue = catchAsync(async (req, res) => {
   const issueId = Number(req.params.id);
 
-  const result = await updateIssueIntoDB(
-    issueId,
-    req.body,
-    req.user,
-  );
+  const result = await updateIssueIntoDB(issueId, req.body, req.user);
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
     message: "Issue updated successfully",
     data: result,
+  });
+});
+
+export const deleteIssue = catchAsync(async (req, res) => {
+  const issueId = Number(req.params.id);
+
+  await deleteIssueFromDB(issueId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Issue deleted successfully",
   });
 });
