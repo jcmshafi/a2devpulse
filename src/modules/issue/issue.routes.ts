@@ -5,6 +5,7 @@ import {
   createIssue,
   getAllIssues,
   getSingleIssue,
+  updateIssue,
 } from "./issue.controller.js";
 
 const router = Router();
@@ -12,4 +13,11 @@ const router = Router();
 router.post("/", auth, authorize("contributor", "maintainer"), createIssue);
 router.get("/", getAllIssues);
 router.get("/:id", getSingleIssue);
+
+router.patch(
+  "/:id",
+  auth,
+  authorize("contributor", "maintainer"),
+  updateIssue,
+);
 export const IssueRoutes = router;

@@ -1,11 +1,6 @@
-export type TIssueType =
-  | "bug"
-  | "feature_request";
+export type TIssueType = "bug" | "feature_request";
 
-export type TIssueStatus =
-  | "open"
-  | "in_progress"
-  | "resolved";
+export type TIssueStatus = "open" | "in_progress" | "resolved";
 
 export interface ICreateIssue {
   title: string;
@@ -16,8 +11,12 @@ export interface ICreateIssue {
 export interface IGetIssuesQuery {
   sort?: "newest" | "oldest";
   type?: "bug" | "feature_request";
-  status?:
-    | "open"
-    | "in_progress"
-    | "resolved";
+  status?: "open" | "in_progress" | "resolved";
+}
+
+export interface IUpdateIssue {
+  title?: string;
+  description?: string;
+  type?: TIssueType;
+  status?: TIssueStatus;
 }

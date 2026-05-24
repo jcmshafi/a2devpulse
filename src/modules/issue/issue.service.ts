@@ -1,7 +1,11 @@
 import { StatusCodes } from "http-status-codes";
 import { pool } from "../../config/db.js";
 import { AppError } from "../../utils/AppError.js";
-import type { ICreateIssue, IGetIssuesQuery } from "./issue.interface.js";
+import type {
+  ICreateIssue,
+  IGetIssuesQuery,
+  IUpdateIssue,
+} from "./issue.interface.js";
 
 export const createIssueIntoDB = async (
   payload: ICreateIssue,
@@ -12,6 +16,13 @@ export const createIssueIntoDB = async (
     throw new AppError(
       StatusCodes.BAD_REQUEST,
       "Short descriptive headline, must be provided, maximum 150 characters",
+    );
+  }
+  //Detailed explanation of the problem or suggestion, must be provided, minimum 20 characters
+  if (payload.description.length < 20) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Detailed explanation of the problem or suggestion, must be provided, minimum 20 characters",
     );
   }
 
@@ -157,7 +168,6 @@ export const getAllIssuesFromDB = async (queryParams: IGetIssuesQuery) => {
 };
 
 export const getSingleIssueFromDB = async (issueId: number) => {
-
   const issueResult = await pool.query(
     `
           SELECT
@@ -177,12 +187,9 @@ export const getSingleIssueFromDB = async (issueId: number) => {
 
   const issue = issueResult.rows[0];
 
-
   if (!issue) {
     throw new AppError(StatusCodes.NOT_FOUND, "Issue not found");
   }
-
-
 
   // Fetch Reporter
 
@@ -200,7 +207,6 @@ export const getSingleIssueFromDB = async (issueId: number) => {
 
   const reporter = reporterResult.rows[0] || null;
 
-
   return {
     id: issue.id,
     title: issue.title,
@@ -211,4 +217,139 @@ export const getSingleIssueFromDB = async (issueId: number) => {
     created_at: issue.created_at,
     updated_at: issue.updated_at,
   };
+};
+
+export const updateIssueIntoDB = async (
+  issueId: number,
+  payload: IUpdateIssue,
+  currentUser: {
+    id: number;
+    role: string;
+  },
+) => {
+  const existingIssueResult = await pool.query(
+    `SELECT *
+      FROM issues
+      WHERE id = $1;
+      `,
+    [issueId],
+  );
+
+  const existingIssue = existingIssueResult.rows[0];
+
+  if (!existingIssue) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Issue not found");
+  }
+
+
+  if (currentUser.role === "contributor") {
+
+    if (existingIssue.reporter_id !== currentUser.id) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        "You can only update your own issues",
+      );
+    }
+    //Contributors cannot change non-open status
+    if (existingIssue.status !== "open") {
+      throw new AppError(
+        StatusCodes.CONFLICT,
+        "You cannot update non-open issues",
+      );
+    }
+    //Contributors cannot change status
+    if (payload.status) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        "Contributors cannot change status",
+      );
+    }
+  }
+
+
+  if (Object.keys(payload).length === 0) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "No update data provided");
+  }
+
+
+  const fields: string[] = [];
+
+  const values: (string | number)[] = [];
+
+  let fieldIndex = 1;
+
+  //title
+  if (payload.title) {
+    if (payload.title.length > 150) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Title cannot exceed 150 characters",
+      );
+    }
+
+    fields.push(`title = $${fieldIndex}`);
+
+    values.push(payload.title);
+
+    fieldIndex++;
+  }
+
+  //description
+  if (payload.description) {
+    if (payload.description.length < 20) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Description must be at least 20 characters",
+      );
+    }
+
+    fields.push(`description = $${fieldIndex}`);
+
+    values.push(payload.description);
+
+    fieldIndex++;
+  }
+
+  //type
+  if (payload.type) {
+    fields.push(`type = $${fieldIndex}`);
+
+    values.push(payload.type);
+
+    fieldIndex++;
+  }
+  //status
+  if (payload.status) {
+    fields.push(`status = $${fieldIndex}`);
+
+    values.push(payload.status);
+
+    fieldIndex++;
+  }
+
+
+  fields.push(`updated_at = NOW()`);
+
+  // Update the issue
+  const query = `
+      UPDATE issues
+
+      SET ${fields.join(", ")}
+
+      WHERE id = $${fieldIndex}
+
+      RETURNING *;
+    `;
+
+  values.push(issueId);
+
+  /*
+    |--------------------------------------------------------------------------
+    | Execute Update
+    |--------------------------------------------------------------------------
+    */
+
+  const updatedIssueResult = await pool.query(query, values);
+
+  return updatedIssueResult.rows[0];
 };
