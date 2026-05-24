@@ -1,5 +1,6 @@
 import express from "express";
 import { auth } from "./middlewares/auth.js";
+import { authorize } from "./middlewares/authorize.js";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler.js";
 import { AuthRoutes } from "./modules/auth/auth.routes.js";
 
@@ -16,14 +17,18 @@ app.get("/", async (_req, res) => {
 
 app.use("/api/auth", AuthRoutes);
 
-
 //test Protected route
-app.get("/api/issues", auth, (req, res) => {
-  res.json({
-    success: true,
-    message: "Protected route accessed",
-  });
-});
+app.get(
+  "/api/issues",
+  auth,
+  authorize("contributor", "maintainer"),
+  (req, res) => {
+    res.json({
+      success: true,
+      message: "This is a protected route for contributors and maintainers",
+    });
+  },
+);
 
 app.use(globalErrorHandler);
 export default app;
