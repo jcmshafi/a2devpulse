@@ -129,7 +129,7 @@ export const getAllIssuesFromDB = async (queryParams: IGetIssuesQuery) => {
 
   const users = usersResult.rows;
 
-  //Create Reporter 
+  //Create Reporter
   const reporterMap = new Map();
   users.forEach((user) => {
     reporterMap.set(user.id, {
@@ -154,4 +154,61 @@ export const getAllIssuesFromDB = async (queryParams: IGetIssuesQuery) => {
   });
 
   return formattedIssues;
+};
+
+export const getSingleIssueFromDB = async (issueId: number) => {
+
+  const issueResult = await pool.query(
+    `
+          SELECT
+            id,
+            title,
+            description,
+            type,
+            status,
+            reporter_id,
+            created_at,
+            updated_at
+          FROM issues
+          WHERE id = $1;
+        `,
+    [issueId],
+  );
+
+  const issue = issueResult.rows[0];
+
+
+  if (!issue) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Issue not found");
+  }
+
+
+
+  // Fetch Reporter
+
+  const reporterResult = await pool.query(
+    `
+          SELECT
+            id,
+            name,
+            role
+          FROM users
+          WHERE id = $1;
+        `,
+    [issue.reporter_id],
+  );
+
+  const reporter = reporterResult.rows[0] || null;
+
+
+  return {
+    id: issue.id,
+    title: issue.title,
+    description: issue.description,
+    type: issue.type,
+    status: issue.status,
+    reporter,
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
 };

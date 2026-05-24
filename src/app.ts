@@ -2,9 +2,11 @@ import express from "express";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler.js";
 import { AuthRoutes } from "./modules/auth/auth.routes.js";
 import { IssueRoutes } from "./modules/issue/issue.routes.js";
+import cors from "cors";
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.get("/", async (_req, res) => {
