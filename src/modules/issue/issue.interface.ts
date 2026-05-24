@@ -12,3 +12,12 @@ export interface ICreateIssue {
   description: string;
   type: TIssueType;
 }
+
+export interface IGetIssuesQuery {
+  sort?: "newest" | "oldest";
+  type?: "bug" | "feature_request";
+  status?:
+    | "open"
+    | "in_progress"
+    | "resolved";
+}
