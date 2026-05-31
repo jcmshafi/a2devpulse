@@ -2,6 +2,12 @@
 
 DevPulse is a TypeScript, Express, and PostgreSQL REST API for tracking software issues. It supports user authentication, role-based authorization, and issue management for contributors and maintainers.
 
+## Links
+
+- **Live API:** https://a2devpulse-steel.vercel.app/
+- **GitHub Repo:** https://github.com/jcmshafi/a2devpulse
+- **Interview Video:** https://drive.google.com/file/d/11zBFZmEMEZFjWTIi4xD1Og3IaUwAdmYJ/view?usp=drive_link
+
 ## Features
 
 - User signup and login with JWT authentication
@@ -103,26 +109,32 @@ Response:
 
 ## Database
 
-The server automatically creates the required tables on startup if they do not already exist:
+The server automatically creates the required tables on startup if they do not already exist.
 
-- `users`
-- `issues`
+### Schema
 
-Allowed user roles:
+**users**
 
-- `contributor`
-- `maintainer`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | SERIAL PRIMARY KEY | |
+| name | VARCHAR(100) | NOT NULL |
+| email | VARCHAR(150) | NOT NULL, UNIQUE |
+| password | TEXT | bcrypt hashed |
+| role | VARCHAR(20) | `contributor` or `maintainer`, default `contributor` |
+| created_at | TIMESTAMP | default NOW() |
 
-Allowed issue types:
+**issues**
 
-- `bug`
-- `feature_request`
-
-Allowed issue statuses:
-
-- `open`
-- `in_progress`
-- `resolved`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | SERIAL PRIMARY KEY | |
+| title | VARCHAR(150) | NOT NULL |
+| description | TEXT | NOT NULL, min 20 chars |
+| type | VARCHAR(30) | `bug` or `feature_request` |
+| status | VARCHAR(20) | `open`, `in_progress`, or `resolved`, default `open` |
+| user_id | INTEGER | FK → users.id |
+| created_at | TIMESTAMP | default NOW() |
 
 ## Authentication
 
