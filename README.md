@@ -6,8 +6,6 @@ DevPulse is a TypeScript, Express, and PostgreSQL REST API for tracking software
 
 - **Live API:** https://a2devpulse-steel.vercel.app/
 - **GitHub Repo:** https://github.com/jcmshafi/a2devpulse
-- **Interview Video:** https://drive.google.com/file/d/11zBFZmEMEZFjWTIi4xD1Og3IaUwAdmYJ/view?usp=drive_link
-
 ## Features
 
 - User signup and login with JWT authentication
